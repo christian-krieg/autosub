@@ -10,6 +10,7 @@ import threading
 from subprocess import Popen, PIPE
 import os
 import shutil
+import sqlite3
 
 import common as c
 
@@ -198,6 +199,56 @@ class TaskGenerator(threading.Thread):
             c.send_email(self.queues["sender"], user_email, user_id, \
                              "TaskErrorNotice", task_nr, "", message_id)
             return
+
+        #
+        # Adapted from tools/add_to_usertasks.py
+        #
+        # Add an entry to the database to indicate that the user requested
+        # the task and that a task specification was sent
+        #
+        c.log_task_msg(self.queues["logger"], log_src, "Adding task to database", "INFO")
+        try:
+            con = sqlite3.connect(self.dbs["semester"], 120)
+        except:
+            print ("Failed to connect to database: %s", self.dbs["semester"])
+            return
+
+        cur = con.cursor()
+
+        sql_cmd = "SELECT * FROM UserTasks WHERE TaskNr==" + str(task_nr) + \
+                " AND UserId ==" + str(user_id) +";"
+
+        cur.execute(sql_cmd)
+
+        res = cur.fetchall()
+
+        if not res:
+            sql_cmd = ("INSERT INTO UserTasks (TaskNr, UserId, TaskParameters, "
+                       "TaskDescription, TaskAttachments, NrSubmissions, "
+                       "FirstSuccessful) VALUES(:TaskNr , :UserId, :TaskParameters, "
+                       ":TaskDescriptions, :TaskAttachments, :NrSubmissions, "
+                       ":FirstSuccessful)"
+            )
+            data = {'TaskNr': task_nr,
+                    'UserId': user_id,
+                    'TaskParameters': "",
+                    'TaskDescriptions': None,
+                    'TaskAttachments': "",
+                    'NrSubmissions':0,
+                    'FirstSuccessful': None
+            }
+        
+            cur.execute(sql_cmd, data)
+            con.commit()
+        else:
+            print ("entry already exists!")
+
+        con.close()
+
+#        cmd = [
+#            scriptpath,
+#
+#        ]
 
         logmsg = "Generated individual task for user/task_nr:" + str(user_id) \
                  + "/" + str(task_nr)

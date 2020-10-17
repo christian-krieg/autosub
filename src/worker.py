@@ -430,9 +430,23 @@ class Worker(threading.Thread):
             return
 
         # run the test script and log the stderr and stdout
-        command = [scriptpath, user_id, task_nr, task_params, configured_backend_interface]
+#        command = [scriptpath, user_id, task_nr, task_params, configured_backend_interface]
+
+        # generate the directory for the task in the space of the user
+        usertask_dir = os.path.join("users", str(user_id),"Task{}".format(task_nr))
+        command = [
+            scriptpath,
+            "--verify",
+            "--report",
+            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+            "--dir={}".format(usertask_dir),
+            "--task-root={}".format(os.path.dirname(scriptpath))
+        ]
+
         logmsg = "Running test script with arguments: {0}".format(command)
         c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+
+
 
         # Popen in asynch, but communicate waits
         process = Popen(command, stdout=PIPE, stderr=PIPE)
