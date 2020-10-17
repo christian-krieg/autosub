@@ -144,7 +144,8 @@ class TaskGenerator(threading.Thread):
         c.check_dir_mkdir(usertask_dir, self.queues["logger"], self.name)
 
         # generate the folder for the task description
-        desc_dir = usertask_dir + "/desc"
+#        desc_dir = usertask_dir + "/desc"
+        desc_dir = usertask_dir + "/spec"
         c.check_dir_mkdir(desc_dir, self.queues["logger"], self.name)
 
         # get the path to the generator script
@@ -155,9 +156,18 @@ class TaskGenerator(threading.Thread):
             logmsg = "Could not find generator script for task{0}".format(task_nr)
             c.log_a_msg(self.queues["logger"], self.name, logmsg, "ERROR")
             return
+#
+#        command = [scriptpath, str(user_id), str(task_nr), self.submission_mail,\
+#                   str(self.course_mode), self.dbs["semester"], str(language)]
 
-        command = [scriptpath, str(user_id), str(task_nr), self.submission_mail,\
-                   str(self.course_mode), self.dbs["semester"], str(language)]
+        command = [
+            scriptpath,
+            "--params",
+            "--specify",
+            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+            "--dir={}".format(usertask_dir),
+            "--task-root={}".format(os.path.dirname(scriptpath))
+        ]
 
         logmsg = "generator command with arguments: {0} ".format(command)
         c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")

@@ -597,12 +597,16 @@ class MailSender(threading.Thread):
 
                 return
 
-            task_name = res[0]
-            description_path = self.course_info['tasks_dir'] + \
-                               '/' + task_name + '/description.txt'
+#            task_name = res[0]
+#            description_path = self.course_info['tasks_dir'] + \
+#                               '/' + task_name + '/description.txt'
+
+            task_name   = res[0]
+            usertaskdir = "users/{0}/Task{1}".format(user_id, task_nr)
+            description_path = os.path.join("users", "{}".format(user_id),"Task{}".format(task_nr),"spec","outline.txt")
 
             if not os.path.isfile(description_path):
-                logmsg = "No description.txt found for Task {0}.".format(task_nr)
+                logmsg = "No description.txt found for Task {} ({})".format(task_nr, description_path)
                 c.log_a_msg(self.queues["logger"], self.name, \
                         logmsg, "ERROR")
 
@@ -631,10 +635,15 @@ class MailSender(threading.Thread):
             logmsg = "got the following attachments: " + str(res)
             c.log_a_msg(self.queues["logger"], self.name, logmsg, \
                         "DEBUG")
-            if res:
-                attachments = str(res[0]).split()
-            else:
-                attachments = ""
+#            if res:
+#                attachments = str(res[0]).split()
+#            else:
+#                attachments = ""
+
+            public_dir = os.path.join(usertaskdir, "spec", "public")
+            attachments = []
+            if (os.path.exists(public_dir)):
+                attachments = [os.path.join(public_dir,x) for x in os.listdir(public_dir)]
 
             msg = self.assemble_email(msg, message_text, attachments)
             self.send_out_email(recipient, msg.as_string(), message_type, 0)
