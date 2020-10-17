@@ -164,6 +164,7 @@ class TaskGenerator(threading.Thread):
             scriptpath,
             "--params",
             "--specify",
+            "--implement",
             "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
             "--dir={}".format(usertask_dir),
             "--task-root={}".format(os.path.dirname(scriptpath))

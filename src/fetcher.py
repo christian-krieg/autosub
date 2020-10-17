@@ -223,7 +223,7 @@ class MailFetcher(threading.Thread):
         submission_nr = self.increment_submission_nr(int(user_id), int(task_nr))
 
         #create a directory for putting his submission in:
-        detach_dir = 'users/{0}/Task{1}'.format(user_id, task_nr)
+        detach_dir = os.path.join("users", str(user_id), "Task{}".format(task_nr), "verify", "public")
 
         ts = datetime.datetime.now()
         format_string = '%Y-%m-%d_%H:%M:%S' # e.g 2018-05-01_23:55:21
