@@ -443,10 +443,8 @@ class Worker(threading.Thread):
             "--task-root={}".format(os.path.dirname(scriptpath))
         ]
 
-        logmsg = "Running test script with arguments: {0}".format(command)
-        c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
-
-
+        logmsg = "Running test script with arguments: {0}".format(" ".join(command))
+        c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
 
         # Popen in asynch, but communicate waits
         process = Popen(command, stdout=PIPE, stderr=PIPE)
