@@ -669,24 +669,30 @@ class MailSender(threading.Thread):
             if not task_already_solved:
                 self.increment_db_taskcounter('NrSubmissions', task_nr)
 
-            path_to_msg = "users/{0}/Task{1}".format(user_id, task_nr)
-            error_msg = self.read_text_file("{0}/error_msg".format(path_to_msg))
+#            path_to_msg = "users/{0}/Task{1}".format(user_id, task_nr)
+#            error_msg = self.read_text_file("{0}/error_msg".format(path_to_msg))
+            path_to_msg = "users/{0}/Task{1}/report".format(user_id, task_nr)
+            error_msg = self.read_text_file("{0}/report.txt".format(path_to_msg))
             msg['Subject'] = "Failure Task" + task_nr
             message_text = "Error report:\n\n""" + error_msg
 
-            reply_attachments = []
+            public_dir = os.path.join(path_to_msg, "public")
+            if os.path.exists(public_dir):
+                reply_attachments = [ os.path.join(public_dir, x) for x in os.listdir(public_dir) ]
+            else:
+                reply_attachments = []
 
-            try:
-                logmsg = "searching attachments in: {0}/error_attachments".format(path_to_msg)
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
-                ats = os.listdir("{0}/error_attachments".format(path_to_msg))
-                logmsg = "got the following attachments: {0}".format(ats)
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
-                for next_attachment in ats:
-                    reply_attachments.append("{0}/error_attachments/{1}".format(path_to_msg, next_attachment))
-            except:
-                logmsg = "no attachments for failed task."
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+#            try:
+#                logmsg = "searching attachments in: {0}".format(public_dir)
+#                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+#                ats = os.listdir(public_dir)
+#                logmsg = "got the following attachments: {0}".format(ats)
+#                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+#                for attachment in ats:
+#                    reply_attachments.append("{0}/error_attachments/{1}".format(path_to_msg, attachment))
+#            except:
+#                logmsg = "no attachments for failed task."
+#                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
 
             msg = self.assemble_email(msg, message_text, reply_attachments)
             self.send_out_email(recipient, msg.as_string(), message_type, 0)
