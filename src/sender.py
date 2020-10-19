@@ -705,7 +705,17 @@ class MailSender(threading.Thread):
         #    SUCCESS    #
         #################
             msg['Subject'] = "Success Task " + task_nr
-            message_text = "You solved the task successfully. Congratulations!"
+            report_file = "users/{0}/Task{1}/report/report.txt".format(user_id, task_nr)
+            report = ""
+            if os.path.exists(report_file):
+                with open(report_file, 'r') as f:
+                    report = f.read()
+
+            if report:
+                message_text = report
+            else:
+                message_text = "You solved the task successfully. Congratulations!"
+
             msg = self.assemble_email(msg, message_text, '')
             self.send_out_email(recipient, msg.as_string(), message_type, 0)
 
