@@ -125,20 +125,6 @@ class TaskGenerator(threading.Thread):
                                                 task_nr, self.queues["logger"], \
                                                 self.name)
 
-        if already_received:
-            if self.allow_requests == "multiple":
-                logmsg = ("User with Id {0} TaskNr {1} already got this task, "
-                          "deleting it to make place for new").format(user_id, task_nr)
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
-                self.delete_usertask(user_id, task_nr)
-            else:
-                logmsg = ("User with Id {0} TaskNr {1} already got this task, "
-                          "multiple request not allowed for this course").format(user_id, task_nr)
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
-
-                c.send_email(self.queues["sender"], str(user_email), str(user_id), \
-                             "NoMultipleRequest", str(task_nr), "", str(message_id))
-                return
 
         # generate the directory for the task in the space of the user
         usertask_dir = 'users/' + str(user_id) + "/Task"+str(task_nr)
@@ -152,11 +138,68 @@ class TaskGenerator(threading.Thread):
         # get the path to the generator script
         scriptpath, language = self.get_scriptinfo(task_nr)
 
+
         # check the path
         if not scriptpath or not os.path.isfile(scriptpath):
             logmsg = "Could not find generator script for task{0}".format(task_nr)
             c.log_a_msg(self.queues["logger"], self.name, logmsg, "ERROR")
             return
+
+        if already_received:
+            if self.allow_requests == "multiple":
+                logmsg = ("User with Id {0} TaskNr {1} already got this task, "
+                          "deleting it to make place for new").format(user_id, task_nr)
+                c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
+                self.delete_usertask(user_id, task_nr)
+            else:
+                logmsg = ("User with Id {0} TaskNr {1} already got this task, "
+                          "multiple request not allowed for this course").format(user_id, task_nr)
+                c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
+
+                # TODO: This is a quick-fix! Make it more beautiful and use a function
+                # instead of code duplication!
+                command = [
+                    scriptpath,
+                    "--specify",
+                    "--implement",
+                    "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+                    "--dir={}".format(usertask_dir),
+                    "--task-root={}".format(os.path.dirname(scriptpath))
+                ]
+        
+                logmsg = "generator command with arguments: {0} ".format(command)
+                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+        
+                process = Popen(command, stdout=PIPE, stderr=PIPE)
+                generator_msg, generator_error = process.communicate()
+                generator_msg = generator_msg.decode('UTF-8')
+                generator_error = generator_error.decode('UTF-8')
+                generator_res = process.returncode
+                log_src = "Generator{0}({1})".format(str(task_nr), str(user_id))
+        
+                if generator_msg:
+                    c.log_task_msg(self.queues["logger"], log_src, generator_msg, "INFO")
+                if generator_error:
+                    c.log_task_error(self.queues["logger"], log_src, generator_error, "ERROR")
+        
+                # Error at task generation
+                if generator_res != 0: # generator not 0 returned
+                    logmsg = "Failed executing the generator script, return value: " + \
+                             str(generator_res)
+                    c.log_a_msg(self.queues["logger"], self.name, logmsg, "ERROR")
+        
+                    # alert to admin
+                    c.send_email(self.queues["sender"], "", user_id, \
+                                     "TaskAlert", task_nr, "", message_id)
+                    #notice to user
+                    c.send_email(self.queues["sender"], user_email, user_id, \
+                                     "TaskErrorNotice", task_nr, "", message_id)
+                    return
+
+                c.send_email(self.queues["sender"], str(user_email), str(user_id), \
+                             "NoMultipleRequest", str(task_nr), "", str(message_id))
+                return
+
 #
 #        command = [scriptpath, str(user_id), str(task_nr), self.submission_mail,\
 #                   str(self.course_mode), self.dbs["semester"], str(language)]

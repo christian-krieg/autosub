@@ -940,16 +940,23 @@ class MailSender(threading.Thread):
         #########################
         #  NO MULTIPLE REQUEST  #
         #########################
-	    # also attach task variant (e.g. if user lost it)
-            data = {'task_nr': str(task_nr), 'user_id': user_id}
-            sql_cmd = ("SELECT TaskAttachments FROM UserTasks "
-                       "WHERE TaskNr == :task_nr AND UserId == :user_id")
-            curs.execute(sql_cmd, data)
-            res = curs.fetchone()
-            logmsg = "got the following attachments: " + str(res)
-            c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
-            if res:
-                attachments = str(res[0]).split()
+#	    # also attach task variant (e.g. if user lost it)
+#            data = {'task_nr': str(task_nr), 'user_id': user_id}
+#            sql_cmd = ("SELECT TaskAttachments FROM UserTasks "
+#                       "WHERE TaskNr == :task_nr AND UserId == :user_id")
+#            curs.execute(sql_cmd, data)
+#            res = curs.fetchone()
+#            logmsg = "got the following attachments: " + str(res)
+#            c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+#
+#            if res:
+#                attachments = str(res[0]).split()
+
+            usertaskdir = "users/{0}/Task{1}".format(user_id, task_nr)
+            public_dir = os.path.join(usertaskdir, "spec", "public")
+            attachments = []
+            if (os.path.exists(public_dir)):
+                attachments = [os.path.join(public_dir,x) for x in os.listdir(public_dir)]
 
             # assemble mail
             msg['Subject'] = "Already received Task{0}".format(str(task_nr))
