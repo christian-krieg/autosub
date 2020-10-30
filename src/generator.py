@@ -66,7 +66,9 @@ class TaskGenerator(threading.Thread):
             generator_name = res[1]
             language = res[2]
 
-            scriptpath = self.tasks_dir + "/" + task_name + "/" + generator_name
+#            scriptpath = self.tasks_dir + "/" + task_name + "/" + generator_name
+#            scriptpath = generator_name
+            scriptpath = os.path.join(self.tasks_dir, task_name, generator_name)
 
         conc.close()
         return (scriptpath, language)
@@ -159,16 +161,18 @@ class TaskGenerator(threading.Thread):
                 # TODO: This is a quick-fix! Make it more beautiful and use a function
                 # instead of code duplication!
                 command = [
-                    scriptpath,
+#                    scriptpath,
+                    "sodaflow",
                     "--specify",
                     "--implement",
-                    "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+#                    "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
                     "--dir={}".format(usertask_dir),
                     "--task-root={}".format(os.path.dirname(scriptpath))
+#                    "--task-root={}".format(scriptpath)
                 ]
         
                 logmsg = "generator command with arguments: {0} ".format(command)
-                c.log_a_msg(self.queues["logger"], self.name, logmsg, "DEBUG")
+                c.log_a_msg(self.queues["logger"], self.name, logmsg, "INFO")
         
                 process = Popen(command, stdout=PIPE, stderr=PIPE)
                 generator_msg, generator_error = process.communicate()
@@ -205,13 +209,15 @@ class TaskGenerator(threading.Thread):
 #                   str(self.course_mode), self.dbs["semester"], str(language)]
 
         command = [
-            scriptpath,
-            "--params",
+#           scriptpath,
+            "sodaflow",
+#            "--params",
             "--specify",
             "--implement",
-            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+#            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
             "--dir={}".format(usertask_dir),
             "--task-root={}".format(os.path.dirname(scriptpath))
+#            "--task-root={}".format(scriptpath)
         ]
 
         logmsg = "generator command with arguments: {0} ".format(command)

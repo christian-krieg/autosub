@@ -155,7 +155,8 @@ class Worker(threading.Thread):
             task_name = res[0]
             tester_name = res[1]
 
-            scriptpath = self.tasks_dir + "/" + task_name + "/" + tester_name
+#            scriptpath = self.tasks_dir + "/" + task_name + "/" + tester_name
+            scriptpath = os.path.join(self.tasks_dir, task_name, tester_name)
 
         conc.close()
         return scriptpath
@@ -435,12 +436,14 @@ class Worker(threading.Thread):
         # generate the directory for the task in the space of the user
         usertask_dir = os.path.join("users", str(user_id),"Task{}".format(task_nr))
         command = [
-            scriptpath,
+            #scriptpath,
+            "sodaflow",
             "--verify",
             "--report",
-            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
+#            "--config={}".format(os.path.join(os.path.dirname(scriptpath), "task.cfg")),
             "--dir={}".format(usertask_dir),
             "--task-root={}".format(os.path.dirname(scriptpath))
+#            "--task-root={}".format(scriptpath)
         ]
 
         logmsg = "Running test script with arguments: {0}".format(" ".join(command))
