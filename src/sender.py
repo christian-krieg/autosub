@@ -704,6 +704,7 @@ class MailSender(threading.Thread):
         #################
         #    SUCCESS    #
         #################
+            path_to_msg = "users/{0}/Task{1}/report".format(user_id, task_nr)
             msg['Subject'] = "Success Task " + task_nr
             report_file = "users/{0}/Task{1}/report/report.txt".format(user_id, task_nr)
             report = ""
@@ -716,7 +717,13 @@ class MailSender(threading.Thread):
             else:
                 message_text = "You solved the task successfully. Congratulations!"
 
-            msg = self.assemble_email(msg, message_text, '')
+            public_dir = os.path.join(path_to_msg, "public")
+            if os.path.exists(public_dir):
+                reply_attachments = [ os.path.join(public_dir, x) for x in os.listdir(public_dir) ]
+            else:
+                reply_attachments = []
+
+            msg = self.assemble_email(msg, message_text, reply_attachments)
             self.send_out_email(recipient, msg.as_string(), message_type, 0)
 
             #set first done if not set yet
